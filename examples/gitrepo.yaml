@@ -1,0 +1,14 @@
+# Apply once manually (not managed by Fleet itself):
+#   kubectl --kubeconfig config apply -f examples/gitrepo.yaml
+#
+# Or create the same GitRepo in Rancher → Continuous Delivery.
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: godemo
+  namespace: fleet-local
+spec:
+  repo: https://github.com/Alexuresp/godemo
+  branch: main
+  paths:
+    - fleet

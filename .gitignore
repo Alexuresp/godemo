@@ -1,0 +1,20 @@
+# Secrets / local cluster access
+config
+*.kubeconfig
+.env
+.env.*
+
+# Go
+/godemo
+/godemo.exe
+*.exe
+*.test
+*.out
+bin/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

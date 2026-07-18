@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>godemo</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --text: #e7ecf3;
+      --muted: #8b9bb4;
+      --accent: #3d9a7a;
+      --border: #2a3548;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 0%, #1a3a2e 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 90% 100%, #1a2840 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+    }
+    main {
+      width: min(36rem, 100%);
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.35rem;
+    }
+    .lead {
+      color: var(--muted);
+      margin: 0 0 1.75rem;
+      font-size: 0.95rem;
+    }
+    form {
+      display: grid;
+      gap: 0.85rem;
+      margin-bottom: 2rem;
+    }
+    label {
+      display: grid;
+      gap: 0.35rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.65rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font: inherit;
+    }
+    input:focus, textarea:focus {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+    }
+    button {
+      justify-self: start;
+      padding: 0.65rem 1.25rem;
+      border: none;
+      border-radius: 6px;
+      background: var(--accent);
+      color: #04140f;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.08); }
+    h2 {
+      font-size: 1.05rem;
+      margin: 0 0 0.75rem;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 0.65rem;
+    }
+    li {
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+    .empty { color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>godemo</h1>
+    <p class="lead">Simple guestbook — GitOps via Fleet on k3s.</p>
+
+    <form method="POST" action="/">
+      <label>
+        Name
+        <input type="text" name="name" required maxlength="80" autocomplete="name" placeholder="Your name">
+      </label>
+      <label>
+        Message
+        <textarea name="message" required maxlength="500" rows="3" placeholder="Say hello"></textarea>
+      </label>
+      <button type="submit">Post</button>
+    </form>
+
+    <h2>Recent messages</h2>
+    {{if .}}
+    <ul>
+      {{range .}}
+      <li>
+        <div class="meta"><strong>{{.Name}}</strong> · {{.Timestamp.Format "2006-01-02 15:04 UTC"}}</div>
+        <div>{{.Message}}</div>
+      </li>
+      {{end}}
+    </ul>
+    {{else}}
+    <p class="empty">No messages yet. Be the first.</p>
+    {{end}}
+  </main>
+</body>
+</html>
