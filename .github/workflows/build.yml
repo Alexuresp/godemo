@@ -58,7 +58,7 @@ jobs:
 
       - name: Update fleet deployment image tag
         run: |
-          sed -i "s|:latest|:${{ steps.image_sha.outputs.sha }}|g" fleet/deployment.yaml
+          sed -i "s|image: ghcr.io/alexuresp/godemo:.*|image: ghcr.io/alexuresp/godemo:${{ steps.image_sha.outputs.sha }}|" fleet/deployment.yaml
           cat fleet/deployment.yaml
 
       - name: Commit and push changes
