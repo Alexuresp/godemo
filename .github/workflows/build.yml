@@ -13,7 +13,7 @@ jobs:
   build-push:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - name: Checkout
@@ -47,3 +47,24 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Extract image SHA
+        id: image_sha
+        run: |
+          SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | grep -v 'latest' | head -n1)
+          IMAGE_SHA=$(echo "$SHA_TAG" | sed 's/.*://')
+          echo "sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
+          echo "Extracted image SHA: $IMAGE_SHA"
+
+      - name: Update fleet deployment image tag
+        run: |
+          sed -i "s|:latest|:${{ steps.image_sha.outputs.sha }}|g" fleet/deployment.yaml
+          cat fleet/deployment.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add fleet/deployment.yaml
+          git diff --cached --quiet || git commit -m "chore: update image tag to ${{ steps.image_sha.outputs.sha }}"
+          git push
