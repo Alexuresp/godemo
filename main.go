@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"embed"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
-	"sync"
 	"time"
+
+	_ "github.com/lib/pq"
 )
 
 //go:embed templates/*
@@ -19,10 +22,14 @@ type entry struct {
 	Timestamp time.Time
 }
 
+type pageData struct {
+	Entries []entry
+	Storage string
+}
+
 type server struct {
-	tmpl    *template.Template
-	mu      sync.Mutex
-	entries []entry
+	tmpl *template.Template
+	db   *sql.DB
 }
 
 func main() {
@@ -31,7 +38,31 @@ func main() {
 		log.Fatalf("parse templates: %v", err)
 	}
 
-	s := &server{tmpl: tmpl}
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL is required")
+	}
+
+	db, err := sql.Open("postgres", dsn)
+	if err != nil {
+		log.Fatalf("open db: %v", err)
+	}
+	defer db.Close()
+
+	db.SetMaxOpenConns(5)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxLifetime(time.Hour)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+	if err := waitForDB(ctx, db); err != nil {
+		log.Fatalf("db not ready: %v", err)
+	}
+	if err := migrate(ctx, db); err != nil {
+		log.Fatalf("migrate: %v", err)
+	}
+
+	s := &server{tmpl: tmpl, db: db}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", s.healthz)
@@ -43,24 +74,85 @@ func main() {
 		addr = ":" + p
 	}
 
-	log.Printf("listening on %s", addr)
+	log.Printf("listening on %s (postgres)", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func (s *server) healthz(w http.ResponseWriter, _ *http.Request) {
+func waitForDB(ctx context.Context, db *sql.DB) error {
+	var last error
+	for {
+		last = db.PingContext(ctx)
+		if last == nil {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return last
+		case <-time.After(2 * time.Second):
+		}
+	}
+}
+
+func migrate(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `
+		CREATE TABLE IF NOT EXISTS messages (
+			id         BIGSERIAL PRIMARY KEY,
+			name       TEXT NOT NULL,
+			message    TEXT NOT NULL,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+		)
+	`)
+	return err
+}
+
+func (s *server) healthz(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+	defer cancel()
+	if err := s.db.PingContext(ctx); err != nil {
+		http.Error(w, "db unavailable", http.StatusServiceUnavailable)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write([]byte("ok"))
 }
 
 func (s *server) index(w http.ResponseWriter, r *http.Request) {
-	s.mu.Lock()
-	entries := append([]entry(nil), s.entries...)
-	s.mu.Unlock()
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT name, message, created_at
+		FROM messages
+		ORDER BY created_at DESC
+		LIMIT 50
+	`)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var entries []entry
+	for rows.Next() {
+		var e entry
+		if err := rows.Scan(&e.Name, &e.Message, &e.Timestamp); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		entries = append(entries, e)
+	}
+	if err := rows.Err(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := s.tmpl.ExecuteTemplate(w, "index.html", entries); err != nil {
+	if err := s.tmpl.ExecuteTemplate(w, "index.html", pageData{
+		Entries: entries,
+		Storage: "PostgreSQL",
+	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -78,16 +170,17 @@ func (s *server) submit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.mu.Lock()
-	s.entries = append([]entry{{
-		Name:      name,
-		Message:   message,
-		Timestamp: time.Now().UTC(),
-	}}, s.entries...)
-	if len(s.entries) > 50 {
-		s.entries = s.entries[:50]
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	_, err := s.db.ExecContext(ctx,
+		`INSERT INTO messages (name, message) VALUES ($1, $2)`,
+		name, message,
+	)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
-	s.mu.Unlock()
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

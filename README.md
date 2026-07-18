@@ -2,7 +2,8 @@
 
 Simple Go guestbook web app, deployed to k3s via [Rancher Fleet](https://fleet.rancher.io/) GitOps.
 
-- App: form (name + message), in-memory list, `/healthz`
+- App: form (name + message) → PostgreSQL, `/healthz` checks DB
+- Postgres in the same namespace (`fleet/postgres.yaml`, PVC 1Gi)
 - Image: `ghcr.io/alexuresp/godemo`
 - Ingress: `http://godemo.192-168-1-103.traefik.me`
 

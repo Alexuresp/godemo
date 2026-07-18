@@ -4,7 +4,7 @@ WORKDIR /src
 COPY go.mod ./
 COPY main.go ./
 COPY templates/ ./templates/
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /godemo .
+RUN go mod tidy && CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /godemo .
 
 # Runtime
 FROM gcr.io/distroless/static-debian12:nonroot
