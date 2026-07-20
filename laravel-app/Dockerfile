@@ -1,6 +1,7 @@
 FROM composer:2 AS deps
 WORKDIR /src
 COPY composer.json composer.lock* ./
+RUN composer config --global policy.advisories.block false
 RUN composer install --no-dev --no-scripts --prefer-dist
 
 FROM php:8.3-fpm-alpine
