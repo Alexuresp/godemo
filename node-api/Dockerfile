@@ -9,8 +9,8 @@ COPY --from=deps /src/node_modules ./node_modules
 COPY src/ ./src/
 COPY package.json ./
 
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs
+RUN addgroup -g 10001 -S nodejs && \
+    adduser -S nodejs -u 10001 -G nodejs
 
 USER nodejs
 
