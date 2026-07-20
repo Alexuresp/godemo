@@ -5,12 +5,16 @@ config
 .env.*
 
 # Go
-/godemo
 /godemo.exe
 *.exe
 *.test
 *.out
 bin/
+godemo/godemo
+
+# Node
+node_modules
+node-api/node_modules
 
 # IDE / OS
 .idea/

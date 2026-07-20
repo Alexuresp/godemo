@@ -11,4 +11,4 @@ spec:
   repo: https://github.com/Alexuresp/godemo
   branch: main
   paths:
-    - fleet
+    - fleet/godemo

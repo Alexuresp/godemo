@@ -3,17 +3,29 @@
 Simple Go guestbook web app, deployed to k3s via [Rancher Fleet](https://fleet.rancher.io/) GitOps.
 
 - App: form (name + message) → PostgreSQL, `/healthz` checks DB
-- Postgres in the same namespace (`fleet/postgres.yaml`, PVC 1Gi)
+- Postgres in the same namespace (`fleet/godemo/postgres.yaml`, PVC 1Gi)
 - Image: `ghcr.io/alexuresp/godemo`
 - Ingress: `http://godemo.192-168-1-103.traefik.me`
 
 ## Layout
 
 ```
-├── main.go / templates/     # Go web server
-├── Dockerfile
-├── .github/workflows/       # build & push to GHCR
-├── fleet/                   # Fleet bundle (Deployment, Service, Ingress)
+├── godemo/                  # Go web app
+│   ├── Dockerfile
+│   ├── go.mod
+│   ├── main.go
+│   ├── templates/
+│   └── .dockerignore
+├── fleet/godemo/            # Fleet bundle (Deployment, Service, Ingress, Postgres)
+│   ├── fleet.yaml
+│   ├── deployment.yaml
+│   ├── service.yaml
+│   ├── ingress.yaml
+│   └── postgres.yaml
+├── node-api/                # (future) Node.js + Express
+├── spring-app/              # (future) Spring Boot
+├── laravel-app/             # (future) Laravel
+├── .github/workflows/       # build & push per app
 └── examples/gitrepo.yaml    # one-time GitRepo for Continuous Delivery
 ```
 
@@ -47,12 +59,12 @@ kubectl --kubeconfig config -n godemo get deploy,svc,ingress,pods
 ## Local run (optional)
 
 ```bash
-go run .
+cd godemo && go run .
 # http://localhost:8080
 ```
 
 ```bash
-docker build -t godemo:local .
+cd godemo && docker build -t godemo:local .
 docker run --rm -p 8080:8080 godemo:local
 ```
 

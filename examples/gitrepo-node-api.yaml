@@ -1,0 +1,17 @@
+# Apply once manually:
+#   kubectl --kubeconfig config apply -f examples/gitrepo-node-api.yaml
+#
+# Or in Rancher: Continuous Delivery → create Git Repo
+#   URL: https://github.com/Alexuresp/godemo
+#   Branch: main
+#   Path: fleet/node-api
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: node-api
+  namespace: fleet-local
+spec:
+  repo: https://github.com/Alexuresp/godemo
+  branch: main
+  paths:
+    - fleet/node-api

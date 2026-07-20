@@ -3,11 +3,14 @@ name: Build and push
 on:
   push:
     branches: [main]
+    paths:
+      - 'node-api/**'
+      - '.github/workflows/node-api.yml'
   workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: alexuresp/godemo
+  IMAGE_NAME: alexuresp/node-api
 
 jobs:
   build-push:
@@ -41,7 +44,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: godemo
+          context: node-api
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -58,13 +61,13 @@ jobs:
 
       - name: Update fleet deployment image tag
         run: |
-          sed -i "s|image: ghcr.io/alexuresp/godemo:.*|image: ghcr.io/alexuresp/godemo:${{ steps.image_sha.outputs.sha }}|" fleet/godemo/deployment.yaml
-          cat fleet/godemo/deployment.yaml
+          sed -i "s|image: ghcr.io/alexuresp/node-api:.*|image: ghcr.io/alexuresp/node-api:${{ steps.image_sha.outputs.sha }}|" fleet/node-api/deployment.yaml
+          cat fleet/node-api/deployment.yaml
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add fleet/godemo/deployment.yaml
-          git diff --cached --quiet || git commit -m "chore: update image tag to ${{ steps.image_sha.outputs.sha }}"
+          git add fleet/node-api/deployment.yaml
+          git diff --cached --quiet || git commit -m "chore(node-api): update image tag to ${{ steps.image_sha.outputs.sha }}"
           git push

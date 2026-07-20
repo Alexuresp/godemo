@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: node-api
+  labels:
+    app: node-api
+data:
+  APP_NAME: node-api
+  GREETING: Hello
+  PORT: "3000"
