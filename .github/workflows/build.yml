@@ -67,4 +67,5 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add fleet/godemo/deployment.yaml
           git diff --cached --quiet || git commit -m "chore: update image tag to ${{ steps.image_sha.outputs.sha }}"
+          git pull --rebase origin main
           git push
