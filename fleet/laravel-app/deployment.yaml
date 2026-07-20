@@ -22,7 +22,7 @@ spec:
             name: laravel-nginx
       initContainers:
         - name: init-code
-          image: ghcr.io/alexuresp/laravel-app:8bcb7e9
+          image: ghcr.io/alexuresp/laravel-app:eae4bb8
           command: ["/bin/sh", "-c", "cp -r /var/www/html/. /app-code/"]
           volumeMounts:
             - name: app-code
@@ -47,7 +47,7 @@ spec:
               cpu: 200m
               memory: 128Mi
         - name: php-fpm
-          image: ghcr.io/alexuresp/laravel-app:8bcb7e9
+          image: ghcr.io/alexuresp/laravel-app:eae4bb8
           ports:
             - name: php-fpm
               containerPort: 9000
