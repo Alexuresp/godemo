@@ -18,7 +18,7 @@ WORKDIR /var/www/html
 COPY --from=deps /src/vendor ./vendor
 COPY . .
 
-RUN chown -R www-data:www-data storage bootstrap/cache
+RUN mkdir -p storage bootstrap/cache && chown -R www-data:www-data storage bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]
