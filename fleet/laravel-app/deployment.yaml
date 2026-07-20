@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: php-fpm
-          image: ghcr.io/alexuresp/laravel-app:latest
+          image: ghcr.io/alexuresp/laravel-app:cd10243
           ports:
             - name: http
               containerPort: 9000
