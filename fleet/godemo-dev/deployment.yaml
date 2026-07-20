@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: godemo
-          image: ghcr.io/alexuresp/godemo:latest
+          image: ghcr.io/alexuresp/godemo-dev:latest
           imagePullPolicy: Always
           ports:
             - name: http
