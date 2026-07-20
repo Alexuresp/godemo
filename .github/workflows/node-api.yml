@@ -8,6 +8,10 @@ on:
       - '.github/workflows/node-api.yml'
   workflow_dispatch:
 
+concurrency:
+  group: node-api-build-${{ github.ref }}
+  cancel-in-progress: false
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: alexuresp/node-api
