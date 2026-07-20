@@ -4,7 +4,7 @@ COPY composer.json composer.lock* ./
 RUN composer config --global policy.advisories.block false
 RUN composer install --no-dev --no-scripts --prefer-dist
 
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 RUN apk add --no-cache \
     libpng-dev libjpeg-turbo-dev freetype-dev libwebp-dev libxpm-dev \
     libzip-dev oniguruma-dev libpq-dev libxml2-dev $PHPIZE_DEPS \
