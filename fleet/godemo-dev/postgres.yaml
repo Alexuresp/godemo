@@ -6,10 +6,10 @@ metadata:
     app: postgres
 type: Opaque
 stringData:
-  POSTGRES_USER: godemo
-  POSTGRES_PASSWORD: godemo
-  POSTGRES_DB: godemo
-  DATABASE_URL: postgres://godemo-dev:godemo-dev@postgres:5432/godemo?sslmode=disable
+  POSTGRES_USER: godemo-dev
+  POSTGRES_PASSWORD: godemo-dev
+  POSTGRES_DB: godemo-dev
+  DATABASE_URL: postgres://godemo-dev:godemo-dev@postgres:5432/godemo-dev?sslmode=disable
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -71,12 +71,12 @@ spec:
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["pg_isready", "-U", "godemo", "-d", "godemo"]
+              command: ["pg_isready", "-U", "godemo-dev", "-d", "godemo-dev"]
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             exec:
-              command: ["pg_isready", "-U", "godemo", "-d", "godemo"]
+              command: ["pg_isready", "-U", "godemo-dev", "-d", "godemo-dev"]
             initialDelaySeconds: 15
             periodSeconds: 10
           resources:
