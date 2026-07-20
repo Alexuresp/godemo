@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: node-api
-          image: ghcr.io/alexuresp/node-api:a7184de
+          image: ghcr.io/alexuresp/node-api:f3ed883
           imagePullPolicy: Always
           ports:
             - name: http
