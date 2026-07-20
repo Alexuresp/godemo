@@ -1,0 +1,84 @@
+name: Build and push
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'laravel-app/**'
+      - '.github/workflows/laravel-app.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: laravel-app-build-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: alexuresp/laravel-app
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: laravel-app
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Extract image SHA
+        id: image_sha
+        run: |
+          SHA_TAG=$(echo "${{ steps.meta.outputs.tags }}" | tr ',' '\n' | grep -v 'latest' | head -n1)
+          IMAGE_SHA=$(echo "$SHA_TAG" | sed 's/.*://')
+          echo "sha=$IMAGE_SHA" >> $GITHUB_OUTPUT
+          echo "Extracted image SHA: $IMAGE_SHA"
+
+      - name: Install yq
+        uses: mikefarah/yq@master
+        with:
+          cmd: yq --version
+
+      - name: Update fleet deployment image tag
+        run: |
+          yq e '.spec.template.spec.containers[1].image = "ghcr.io/alexuresp/laravel-app:${{ steps.image_sha.outputs.sha }}"' -i fleet/laravel-app/deployment.yaml
+          yq e '.spec.template.spec.initContainers[0].image = "ghcr.io/alexuresp/laravel-app:${{ steps.image_sha.outputs.sha }}"' -i fleet/laravel-app/deployment.yaml
+          cat fleet/laravel-app/deployment.yaml
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add fleet/laravel-app/deployment.yaml
+          git diff --cached --quiet || git commit -m "chore(laravel-app): update image tag to ${{ steps.image_sha.outputs.sha }}"
+          git pull --rebase origin main
+          git push
