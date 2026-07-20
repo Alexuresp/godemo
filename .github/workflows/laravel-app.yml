@@ -70,8 +70,7 @@ jobs:
 
       - name: Update fleet deployment image tag
         run: |
-          yq e '.spec.template.spec.containers[1].image = "ghcr.io/alexuresp/laravel-app:${{ steps.image_sha.outputs.sha }}"' -i fleet/laravel-app/deployment.yaml
-          yq e '.spec.template.spec.initContainers[0].image = "ghcr.io/alexuresp/laravel-app:${{ steps.image_sha.outputs.sha }}"' -i fleet/laravel-app/deployment.yaml
+          yq e '.spec.template.spec.containers[0].image = "ghcr.io/alexuresp/laravel-app:${{ steps.image_sha.outputs.sha }}"' -i fleet/laravel-app/deployment.yaml
           cat fleet/laravel-app/deployment.yaml
 
       - name: Commit and push changes

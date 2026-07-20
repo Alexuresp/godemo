@@ -14,51 +14,27 @@ spec:
       labels:
         app: laravel
     spec:
-      volumes:
-        - name: app-code
-          emptyDir: {}
-        - name: nginx-config
-          configMap:
-            name: laravel-nginx
-      initContainers:
-        - name: init-code
-          image: ghcr.io/alexuresp/laravel-app:16675a6
-          command: ["/bin/sh", "-c", "cp -r /var/www/html/. /app-code/"]
-          volumeMounts:
-            - name: app-code
-              mountPath: /app-code
       containers:
-        - name: nginx
-          image: nginx:alpine
+        - name: php-fpm
+          image: ghcr.io/alexuresp/laravel-app:latest
           ports:
             - name: http
-              containerPort: 80
-          volumeMounts:
-            - name: app-code
-              mountPath: /var/www/html
-              readOnly: true
-            - name: nginx-config
-              mountPath: /etc/nginx/conf.d
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
-        - name: php-fpm
-          image: ghcr.io/alexuresp/laravel-app:16675a6
-          ports:
-            - name: php-fpm
               containerPort: 9000
           envFrom:
             - configMapRef:
                 name: laravel
             - secretRef:
                 name: laravel
-          volumeMounts:
-            - name: app-code
-              mountPath: /var/www/html
+          readinessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
           resources:
             requests:
               cpu: 50m
@@ -66,13 +42,3 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
-          readinessProbe:
-            tcpSocket:
-              port: php-fpm
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          livenessProbe:
-            tcpSocket:
-              port: php-fpm
-            initialDelaySeconds: 10
-            periodSeconds: 10
