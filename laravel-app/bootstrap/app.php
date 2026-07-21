@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\View\ViewServiceProvider;
 
 $app = Application::configure(basePath: dirname(__DIR__))
@@ -20,6 +21,7 @@ $app = Application::configure(basePath: dirname(__DIR__))
     })
     ->create();
 
+$app->register(FilesystemServiceProvider::class);
 $app->register(ViewServiceProvider::class);
 
 return $app;
