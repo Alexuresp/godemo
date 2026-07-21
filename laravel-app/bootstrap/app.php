@@ -3,7 +3,6 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Encryption\EncryptionServiceProvider;
 use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\Translation\TranslationServiceProvider;
 use Illuminate\View\ViewServiceProvider;
@@ -24,7 +23,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
     ->create();
 
 $app->configure('app');
-$app->register(EncryptionServiceProvider::class);
 $app->register(FilesystemServiceProvider::class);
 $app->register(ViewServiceProvider::class);
 $app->register(TranslationServiceProvider::class);
