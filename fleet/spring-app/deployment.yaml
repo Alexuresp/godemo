@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: spring-app
-          image: ghcr.io/alexuresp/spring-app:0ffb83d
+          image: ghcr.io/alexuresp/spring-app:bab490b
           imagePullPolicy: Always
           ports:
             - name: http
