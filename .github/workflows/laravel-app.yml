@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'laravel-app/**'
+      - 'fleet/laravel-app/**'
       - '.github/workflows/laravel-app.yml'
   workflow_dispatch:
 
