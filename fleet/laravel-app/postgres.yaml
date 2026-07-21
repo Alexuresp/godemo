@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+type: Opaque
+stringData:
+  POSTGRES_USER: laravel
+  POSTGRES_PASSWORD: laravel
+  POSTGRES_DB: laravel
+  DATABASE_URL: postgresql://laravel:laravel@laravel-rw.laravel.svc.cluster.local:5432/laravel?sslmode=disable

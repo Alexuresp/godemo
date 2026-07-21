@@ -1,0 +1,43 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: laravel
+  namespace: laravel
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.6
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 1Gi
+    storageClass: local-path
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  bootstrap:
+    initdb:
+      database: laravel
+      owner: laravel
+      secret:
+        name: laravel-credentials
+  superuserSecret:
+    name: laravel-superuser
+  backup:
+    retentionPolicy: "7d"
+    barmanObjectStore:
+      destinationPath: s3://cnpg-backups/laravel
+      endpointURL: http://10.132.7.1:9000
+      s3Credentials:
+        accessKeyId:
+          name: minio-credentials
+          key: MINIO_ACCESS_KEY
+        secretAccessKey:
+          name: minio-credentials
+          key: MINIO_SECRET_KEY
+      wal:
+        compression: snappy
+      data:
+        compression: gzip

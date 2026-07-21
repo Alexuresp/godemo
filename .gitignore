@@ -1,5 +1,5 @@
 # Secrets / local cluster access
-config
+/config
 *.kubeconfig
 .env
 .env.*
@@ -15,6 +15,15 @@ godemo/godemo
 # Node
 node_modules
 node-api/node_modules
+
+# PHP / Laravel
+laravel-app/vendor
+laravel-app/node_modules
+
+# Java / Spring Boot
+spring-app/target
+spring-app/*.jar
+spring-app/*.war
 
 # IDE / OS
 .idea/

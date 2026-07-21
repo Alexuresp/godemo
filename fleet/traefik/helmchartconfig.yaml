@@ -1,0 +1,17 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    ports:
+      web:
+        forwardedHeaders:
+          insecure: true
+      websecure:
+        forwardedHeaders:
+          insecure: true
+    service:
+      spec:
+        externalTrafficPolicy: Local

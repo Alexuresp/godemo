@@ -1,0 +1,40 @@
+<?php
+
+use Illuminate\Foundation\Application;
+use Illuminate\Foundation\Configuration\Exceptions;
+use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Config\Repository as ConfigRepository;
+use Illuminate\Cookie\CookieServiceProvider;
+use Illuminate\Encryption\EncryptionServiceProvider;
+use Illuminate\Filesystem\FilesystemServiceProvider;
+use Illuminate\Translation\TranslationServiceProvider;
+use Illuminate\View\ViewServiceProvider;
+
+$app = Application::configure(basePath: dirname(__DIR__))
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->trustProxies('10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,127.0.0.1/32');
+    })
+    ->withExceptions(function (Exceptions $exceptions) {
+        // Placeholder for exception handler configuration
+    })
+    ->create();
+
+$app->singleton('config', function ($app) {
+    $configPath = $app->basePath('config/app.php');
+    $config = is_file($configPath) ? require $configPath : [];
+    return new ConfigRepository($config);
+});
+
+$app->register(CookieServiceProvider::class);
+$app->register(EncryptionServiceProvider::class);
+$app->register(FilesystemServiceProvider::class);
+$app->register(ViewServiceProvider::class);
+$app->register(TranslationServiceProvider::class);
+
+return $app;

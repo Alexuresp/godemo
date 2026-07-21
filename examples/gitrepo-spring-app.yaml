@@ -1,0 +1,10 @@
+apiVersion: fleet.cattle.io/v1alpha1
+kind: GitRepo
+metadata:
+  name: spring-app
+  namespace: fleet-local
+spec:
+  repo: https://github.com/Alexuresp/godemo
+  branch: main
+  paths:
+    - fleet/spring-app
