@@ -26,7 +26,10 @@ spec:
       initContainers:
         - name: init-code
           image: ghcr.io/alexuresp/laravel-app:4f385d1
-          command: ["/bin/sh", "-c", "cp -r /var/www/html/. /app-code/ && chown -R www-data:www-data /app-code"]
+          command: ["/bin/sh", "-c", "cp -r /var/www/html/. /app-code/"]
+          securityContext:
+            runAsUser: 82
+            runAsGroup: 82
           volumeMounts:
             - name: app-code
               mountPath: /app-code
