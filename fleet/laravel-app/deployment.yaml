@@ -20,6 +20,9 @@ spec:
         - name: nginx-config
           configMap:
             name: laravel-nginx
+        - name: nginx-main-config
+          configMap:
+            name: laravel-nginx
       initContainers:
         - name: init-code
           image: ghcr.io/alexuresp/laravel-app:1b1edeb
@@ -39,6 +42,9 @@ spec:
               readOnly: true
             - name: nginx-config
               mountPath: /etc/nginx/conf.d
+            - name: nginx-main-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
           resources:
             requests:
               cpu: 10m

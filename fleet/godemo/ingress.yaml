@@ -4,6 +4,8 @@ metadata:
   name: godemo
   labels:
     app: godemo
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: kube-system-real-ip@kubernetescrd
 spec:
   rules:
     - host: godemo.192-168-1-103.traefik.me

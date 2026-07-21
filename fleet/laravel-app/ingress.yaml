@@ -4,6 +4,8 @@ metadata:
   name: laravel
   labels:
     app: laravel
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: kube-system-real-ip@kubernetescrd
 spec:
   rules:
     - host: laravel.192-168-1-103.traefik.me
