@@ -16,15 +16,16 @@ Multi-app k3s GitOps lab: Go, Node.js, Spring Boot, Laravel. Fleet for delivery,
 
 ```
 ├── godemo/                  # Go web app
+├── godemo-dev/               # Go web app (dev)
 ├── node-api/                # Node.js + Express
 ├── spring-app/              # Spring Boot 3 + Java 21
 ├── laravel-app/             # Laravel 11 + PHP-FPM + Nginx + Redis + PostgreSQL
-├── fleet/
-│   ├── godemo/
-│   ├── godemo-dev/
-│   ├── node-api/
-│   ├── spring-app/
-│   └── laravel-app/
+└── fleet/
+    ├── godemo/
+    ├── godemo-dev/
+    ├── node-api/
+    ├── spring-app/
+    └── laravel-app/
 ├── examples/                # GitRepo manifests for Fleet
 ├── .github/workflows/       # CI: build → push → yq update → git push
 ├── metallb-pool.yaml        # MetalLB IPAddressPool + L2Advertisement
@@ -106,6 +107,72 @@ kubectl --kubeconfig config -n laravel get deploy,svc,ingress,pods
 | `.github/workflows/node-api.yml` | `main` | `ghcr.io/alexuresp/node-api` |
 | `.github/workflows/spring-app.yml` | `main` | `ghcr.io/alexuresp/spring-app` |
 | `.github/workflows/laravel-app.yml` | `main` | `ghcr.io/alexuresp/laravel-app` |
+
+## PostgreSQL backups
+
+PostgreSQL is managed by **CloudNativePG** (v1.30.0). Each app namespace has its own CNPG `Cluster` resource, and backups are stored in **MinIO** via barman-cloud.
+
+### Cluster layout
+
+| Namespace | CNPG Cluster | Service RW | App credentials |
+|-----------|--------------|------------|-----------------|
+| `godemo` | `godemo` | `godemo-rw.godemo.svc.cluster.local:5432` | user `godemo`, DB `godemo` |
+| `godemo-dev` | `godemo-dev` | `godemo-dev-rw.godemo-dev.svc.cluster.local:5432` | user `godemo-dev`, DB `godemo-dev` |
+| `laravel` | `laravel` | `laravel-rw.laravel.svc.cluster.local:5432` | user `laravel`, DB `laravel` |
+
+### Backup destination
+
+- **MinIO endpoint:** `http://10.132.7.1:9000`
+- **Bucket:** `cnpg-backups`
+- **Paths:** `s3://cnpg-backups/godemo`, `s3://cnpg-backups/godemo-dev`, `s3://cnpg-backups/laravel`
+- **Retention:** 7 days
+- **Format:** compressed data backups + WAL archiving (continuous archiving enabled)
+
+Backups run automatically from the CNPG operator. No separate CronJob is needed.
+
+### Restore with `cnpg` plugin (recommended)
+
+Install the plugin:
+
+```bash
+kubectl cnpg install
+```
+
+List available backups:
+
+```bash
+kubectl cnpg backup ls -n godemo
+kubectl cnpg backup ls -n godemo-dev
+kubectl cnpg backup ls -n laravel
+```
+
+Restore the latest backup to a new cluster (point-in-time recovery is also supported):
+
+```bash
+kubectl cnpg restore backup -n godemo --target-name godemo-restored
+```
+
+### Restore manually (from MinIO)
+
+If you need to restore into an existing cluster:
+
+```bash
+# 1. List objects in MinIO bucket
+mc ls myminio/cnpg-backups/godemo/
+
+# 2. Download a specific backup
+mc cp myminio/cnpg-backups/godemo/base_.../data.tar.gz ./data.tar.gz
+
+# 3. Restore with pg_restore
+kubectl exec -n godemo deploy/godemo-1 -- \
+  pg_restore -U postgres -d godemo --clean /backups/data.tar.gz
+```
+
+### Important notes
+
+- CNPG `Cluster` replaces the old `postgres` Deployment/Service/PVC. Old resources were removed during migration.
+- App secrets (`DATABASE_URL`) now point to `*-rw` CNPG services instead of `postgres:5432`.
+- Old PostgreSQL data was migrated to CNPG during the initial setup.
 
 ## Production-grade details
 
