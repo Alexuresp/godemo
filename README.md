@@ -1,62 +1,124 @@
-# godemo
+# k3sdemo
 
-Simple Go guestbook web app, deployed to k3s via [Rancher Fleet](https://fleet.rancher.io/) GitOps.
+Multi-app k3s GitOps lab: Go, Node.js, Spring Boot, Laravel. Fleet for delivery, MetalLB for LoadBalancer IPs, Traefik as ingress.
 
-- App: form (name + message) → PostgreSQL, `/healthz` checks DB
-- Postgres in the same namespace (`fleet/godemo/postgres.yaml`, PVC 1Gi)
-- Image: `ghcr.io/alexuresp/godemo`
-- Ingress: `http://godemo.192-168-1-151.traefik.me`
+## Stack
+
+| App | Image | Namespace | Ingress |
+|-----|-------|-----------|---------|
+| godemo | `ghcr.io/alexuresp/godemo` | `godemo` | `http://godemo.192-168-1-151.traefik.me` |
+| godemo-dev | `ghcr.io/alexuresp/godemo-dev` | `godemo-dev` | `http://godemo-dev.192-168-1-151.traefik.me` |
+| node-api | `ghcr.io/alexuresp/node-api` | `node-api` | `http://node-api.192-168-1-151.traefik.me` |
+| spring-app | `ghcr.io/alexuresp/spring-app` | `spring-app` | `http://spring-app.192-168-1-151.traefik.me` |
+| laravel | `ghcr.io/alexuresp/laravel-app` | `laravel` | `http://laravel.192-168-1-151.traefik.me` |
 
 ## Layout
 
 ```
 ├── godemo/                  # Go web app
-│   ├── Dockerfile
-│   ├── go.mod
-│   ├── main.go
-│   ├── templates/
-│   └── .dockerignore
-├── fleet/godemo/            # Fleet bundle (Deployment, Service, Ingress, Postgres)
-│   ├── fleet.yaml
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── ingress.yaml
-│   └── postgres.yaml
-├── node-api/                # (future) Node.js + Express
-├── spring-app/              # (future) Spring Boot
-├── laravel-app/             # (future) Laravel
-├── .github/workflows/       # build & push per app
-└── examples/gitrepo.yaml    # one-time GitRepo for Continuous Delivery
+├── node-api/                # Node.js + Express
+├── spring-app/              # Spring Boot 3 + Java 21
+├── laravel-app/             # Laravel 11 + PHP-FPM + Nginx + Redis + PostgreSQL
+├── fleet/
+│   ├── godemo/
+│   ├── godemo-dev/
+│   ├── node-api/
+│   ├── spring-app/
+│   └── laravel-app/
+├── examples/                # GitRepo manifests for Fleet
+├── .github/workflows/       # CI: build → push → yq update → git push
+├── metallb-pool.yaml        # MetalLB IPAddressPool + L2Advertisement
+└── README.md
 ```
 
 ## Prerequisites
 
 - k3s + Rancher (Fleet / Continuous Delivery)
 - Public GitHub repo: https://github.com/Alexuresp/godemo
-- `kubectl` and a kubeconfig (local file `config` is gitignored)
+- `kubectl` and kubeconfig (`config` is gitignored)
+
+## MetalLB
+
+k3s ships with Klipper LB (`svclb-traefik`), which does not preserve the real client IP for LoadBalancer services. MetalLB replaces it with a proper L2 load balancer.
+
+### Install
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
+```
+
+### Configure IP pool
+
+```bash
+kubectl apply -f metallb-pool.yaml
+```
+
+Pool: `192.168.1.151-192.168.1.199` (outside DHCP range `192.168.1.100-150`).
+
+### Verify
+
+```bash
+kubectl -n metallb-system get pods
+kubectl -n kube-system get svc traefik
+```
+
+Expected output:
+```
+traefik   LoadBalancer   10.43.18.81   192.168.1.151   ...
+```
+
+### Real IP caveat
+
+Even with MetalLB, in single-node k3s the real client IP is still not visible inside pods if traffic passes through Klipper LB host-port rules. This is a known limitation of the k3s ServiceLB architecture. For production, use an external load balancer or `hostNetwork: true` with caution (may break CoreDNS).
+
+### Files
+
+- `fleet/traefik/helmchartconfig.yaml` — `forwardedHeaders.insecure: true`, `externalTrafficPolicy: Local`
+- `metallb-pool.yaml` — `IPAddressPool` + `L2Advertisement`
 
 ## Deploy flow
 
-1. **Push to `main`** — GitHub Actions builds and pushes `ghcr.io/alexuresp/godemo:latest`.
-2. **Make the GHCR package public** (first time): GitHub → Packages → `godemo` → Package settings → Change visibility → Public. Without this, nodes get `ImagePullBackOff`.
-3. **Register the GitRepo once:**
+1. **Push to `main`** — GitHub Actions builds and pushes app images to GHCR.
+2. **Register the GitRepo once per app:**
 
 ```bash
 kubectl --kubeconfig config apply -f examples/gitrepo.yaml
+kubectl --kubeconfig config apply -f examples/gitrepo-node-api.yaml
+kubectl --kubeconfig config apply -f examples/gitrepo-spring-app.yaml
+kubectl --kubeconfig config apply -f examples/gitrepo-laravel-app.yaml
 ```
 
-Or in Rancher: **Continuous Delivery** → create Git Repo → URL `https://github.com/Alexuresp/godemo`, branch `main`, path `fleet`, target the local cluster.
-
-4. **Check:**
+3. **Check:**
 
 ```bash
-kubectl --kubeconfig config -n fleet-local get gitrepo godemo
+kubectl --kubeconfig config -n fleet-local get gitrepo
 kubectl --kubeconfig config -n godemo get deploy,svc,ingress,pods
+kubectl --kubeconfig config -n node-api get deploy,svc,ingress,pods
+kubectl --kubeconfig config -n spring-app get deploy,svc,ingress,pods
+kubectl --kubeconfig config -n laravel get deploy,svc,ingress,pods
 ```
 
-5. Open http://godemo.192-168-1-151.traefik.me
+## CI per app
 
-## Local run (optional)
+| Workflow | Branch | Image |
+|----------|--------|-------|
+| `.github/workflows/build.yml` | `main` → `godemo`, `develop` → `godemo-dev` | `ghcr.io/alexuresp/godemo`, `ghcr.io/alexuresp/godemo-dev` |
+| `.github/workflows/node-api.yml` | `main` | `ghcr.io/alexuresp/node-api` |
+| `.github/workflows/spring-app.yml` | `main` | `ghcr.io/alexuresp/spring-app` |
+| `.github/workflows/laravel-app.yml` | `main` | `ghcr.io/alexuresp/laravel-app` |
+
+## Production-grade details
+
+- **Non-root containers**: all apps run as non-root users
+- **Health checks**: readiness/liveness probes on `/healthz` or `/actuator/health`
+- **Resources**: requests/limits set for every container
+- **Secrets**: passwords and keys in Kubernetes Secrets, not in Git
+- **ConfigMaps**: environment-specific config separated from code
+- **Image tags**: SHA tags via CI, `latest` only on default branch
+- **Multi-stage Docker**: minimal runtime images
+- **Logs**: stdout/stderr for all containers, collectable via `kubectl logs`
+
+## Local run
 
 ```bash
 cd godemo && go run .
@@ -64,12 +126,16 @@ cd godemo && go run .
 ```
 
 ```bash
-cd godemo && docker build -t godemo:local .
-docker run --rm -p 8080:8080 godemo:local
+cd node-api && npm install && npm start
+# http://localhost:3000
 ```
 
-## Verify Fleet is present
+```bash
+cd spring-app && mvn spring-boot:run
+# http://localhost:8080
+```
 
 ```bash
-kubectl --kubeconfig config get ns fleet-local
+cd laravel-app && composer install && php artisan serve
+# http://localhost:8000
 ```
