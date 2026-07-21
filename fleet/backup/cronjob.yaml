@@ -41,10 +41,10 @@ spec:
                   BACKUP_DIR=/backups
                   DATE=$(date +%Y%m%d_%H%M%S)
                   echo "Starting PostgreSQL backup at $DATE"
-                  PGPASSWORD=$GODEMO_PASSWORD pg_dump -h postgres.godemo.svc.cluster.local -U godemo -d godemo -Fc -f $BACKUP_DIR/godemo_$DATE.dump
-                  PGPASSWORD=$GODEMO_DEV_PASSWORD pg_dump -h postgres.godemo-dev.svc.cluster.local -U godemo-dev -d godemo-dev -Fc -f $BACKUP_DIR/godemo-dev_$DATE.dump
-                  PGPASSWORD=$LARAVEL_PASSWORD pg_dump -h postgres.laravel.svc.cluster.local -U laravel -d laravel -Fc -f $BACKUP_DIR/laravel_$DATE.dump
-                  find $BACKUP_DIR -name "*.dump" -mtime +7 -delete
+                  PGPASSWORD=$GODEMO_PASSWORD pg_dump -h postgres.godemo.svc.cluster.local -U godemo -d godemo -Fp -f $BACKUP_DIR/godemo_$DATE.sql
+                  PGPASSWORD=$GODEMO_DEV_PASSWORD pg_dump -h postgres.godemo-dev.svc.cluster.local -U godemo-dev -d godemo-dev -Fp -f $BACKUP_DIR/godemo-dev_$DATE.sql
+                  PGPASSWORD=$LARAVEL_PASSWORD pg_dump -h postgres.laravel.svc.cluster.local -U laravel -d laravel -Fp -f $BACKUP_DIR/laravel_$DATE.sql
+                  find $BACKUP_DIR -name "*.sql" -mtime +7 -delete
                   echo "Backup completed"
               volumeMounts:
                 - name: backups
