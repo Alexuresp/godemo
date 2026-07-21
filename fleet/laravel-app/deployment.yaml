@@ -22,7 +22,7 @@ spec:
             name: laravel-nginx
         - name: nginx-main-config
           configMap:
-            name: laravel-nginx
+            name: laravel-nginx-main
       initContainers:
         - name: init-code
           image: ghcr.io/alexuresp/laravel-app:bab490b
