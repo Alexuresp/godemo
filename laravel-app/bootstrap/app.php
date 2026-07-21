@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Config\Repository as ConfigRepository;
+use Illuminate\Cookie\CookieServiceProvider;
 use Illuminate\Encryption\EncryptionServiceProvider;
 use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\Translation\TranslationServiceProvider;
@@ -30,6 +31,7 @@ $app->singleton('config', function ($app) {
     return new ConfigRepository($config);
 });
 
+$app->register(CookieServiceProvider::class);
 $app->register(EncryptionServiceProvider::class);
 $app->register(FilesystemServiceProvider::class);
 $app->register(ViewServiceProvider::class);
