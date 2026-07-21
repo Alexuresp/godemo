@@ -5,7 +5,7 @@ Simple Go guestbook web app, deployed to k3s via [Rancher Fleet](https://fleet.r
 - App: form (name + message) → PostgreSQL, `/healthz` checks DB
 - Postgres in the same namespace (`fleet/godemo/postgres.yaml`, PVC 1Gi)
 - Image: `ghcr.io/alexuresp/godemo`
-- Ingress: `http://godemo.192-168-1-103.traefik.me`
+- Ingress: `http://godemo.192-168-1-151.traefik.me`
 
 ## Layout
 
@@ -54,7 +54,7 @@ kubectl --kubeconfig config -n fleet-local get gitrepo godemo
 kubectl --kubeconfig config -n godemo get deploy,svc,ingress,pods
 ```
 
-5. Open http://godemo.192-168-1-103.traefik.me
+5. Open http://godemo.192-168-1-151.traefik.me
 
 ## Local run (optional)
 

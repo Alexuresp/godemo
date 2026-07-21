@@ -6,7 +6,7 @@ metadata:
     app: spring-app
 spec:
   rules:
-    - host: spring-app.192-168-1-103.traefik.me
+    - host: spring-app.192-168-1-151.traefik.me
       http:
         paths:
           - path: /

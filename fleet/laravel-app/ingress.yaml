@@ -6,7 +6,7 @@ metadata:
     app: laravel
 spec:
   rules:
-    - host: laravel.192-168-1-103.traefik.me
+    - host: laravel.192-168-1-151.traefik.me
       http:
         paths:
           - path: /
