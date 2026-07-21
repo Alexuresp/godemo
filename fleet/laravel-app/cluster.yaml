@@ -39,7 +39,5 @@ spec:
           key: MINIO_SECRET_KEY
       wal:
         compression: snappy
-        encryption: AES256
       data:
         compression: gzip
-        encryption: AES256
