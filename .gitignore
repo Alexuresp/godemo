@@ -1,5 +1,5 @@
 # Secrets / local cluster access
-config
+/config
 *.kubeconfig
 .env
 .env.*
