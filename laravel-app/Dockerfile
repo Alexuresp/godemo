@@ -12,7 +12,6 @@ RUN apk add --no-cache \
     && docker-php-ext-install -j$(nproc) gd mbstring bcmath pdo_pgsql zip opcache \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && addgroup -g 82 -S www-data && adduser -S -u 82 -G www-data www-data \
     && apk del $PHPIZE_DEPS
 
 WORKDIR /var/www/html
