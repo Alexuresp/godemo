@@ -29,7 +29,9 @@ return [
         Illuminate\Database\DatabaseServiceProvider::class,
         Illuminate\Redis\RedisServiceProvider::class,
         Illuminate\Session\SessionServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
+        Illuminate\Translation\TranslationServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
     ],
 
@@ -40,6 +42,8 @@ return [
         'Redis' => Illuminate\Support\Facades\Redis::class,
         'Cache' => Illuminate\Support\Facades\Cache::class,
         'View' => Illuminate\Support\Facades\View::class,
+        'File' => Illuminate\Support\Facades\File::class,
+        'Lang' => Illuminate\Support\Facades\Lang::class,
     ],
 
 ];
