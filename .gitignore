@@ -20,6 +20,11 @@ node-api/node_modules
 laravel-app/vendor
 laravel-app/node_modules
 
+# Java / Spring Boot
+spring-app/target
+spring-app/*.jar
+spring-app/*.war
+
 # IDE / OS
 .idea/
 .vscode/
