@@ -1,0 +1,12 @@
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: default-model-config
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: "openrouter/free"
+  apiKeySecret: openrouter-secret
+  apiKeySecretKey: apiKey
+  openAI:
+    baseUrl: "https://openrouter.ai/api/v1"

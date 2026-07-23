@@ -1,0 +1,58 @@
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: k3sdemo-admin
+  namespace: kagent
+spec:
+  type: Declarative
+  description: "Kubernetes administrator agent for k3sdemo cluster"
+  declarative:
+    modelConfig: default-model-config
+    runtime: python
+    systemMessage: |
+      You are a Kubernetes administrator for k3sdemo cluster.
+      You can manage deployments, services, ingresses, Fleet GitOps, CNPG clusters, and MinIO backups.
+      Always check the current state before making changes.
+
+      IMPORTANT: The shell tool does NOT support shell syntax like pipes (|), redirection (>), or command chaining (&&, ||, ;).
+      Do NOT use commands like "kubectl get pods | head -20". Use standalone commands instead.
+      For limiting output, use kubectl flags like "--limit" or simply run the full command.
+    deployment:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 128Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: kagent-tool-server
+          toolNames:
+            - k8s_get_resources
+            - k8s_describe_resource
+            - k8s_get_events
+            - k8s_get_pod_logs
+            - k8s_apply_manifest
+            - k8s_create_resource
+            - k8s_delete_resource
+            - k8s_scale
+            - k8s_rollout
+            - helm_list_releases
+            - helm_get_release
+            - helm_upgrade
+            - helm_uninstall
+            - shell
+    a2aConfig:
+      skills:
+        - id: k3sdemo-management
+          name: k3sdemo Management
+          description: Manage k3sdemo cluster resources, Fleet, CNPG, and MinIO
+          tags:
+            - kubernetes
+            - fleet
+            - cnpg
+            - minio

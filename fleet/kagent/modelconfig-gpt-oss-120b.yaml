@@ -1,0 +1,12 @@
+apiVersion: kagent.dev/v1alpha2
+kind: ModelConfig
+metadata:
+  name: gpt-oss-120b
+  namespace: kagent
+spec:
+  provider: OpenAI
+  model: "openai/gpt-oss-120b"
+  apiKeySecret: openrouter-secret
+  apiKeySecretKey: apiKey
+  openAI:
+    baseUrl: "https://openrouter.ai/api/v1"
